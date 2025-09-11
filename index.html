@@ -1,13 +1,708 @@
-<!doctype html>
-<html lang="en" data-critters-container>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>MYuitsu</title>
-  <base href="MYuitsu.github.io">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="stylesheet" href="styles-5INURTSO.css"></head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Text Comparison Tool</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff/5.1.0/diff.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f0ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #764ba2;
+            background: #e6f0ff;
+            transform: scale(1.02);
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .column-selector {
+            display: none;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .selector-group {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .selector-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .selector-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .compare-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .compare-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .compare-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #fd7e14, #e55a4e);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(253, 126, 20, 0.3);
+        }
+
+        .table-container {
+            max-height: 600px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .original-col {
+            background: #e3f2fd;
+        }
+
+        .comparison-col {
+            background: #f3e5f5;
+        }
+
+        .diff-text {
+            line-height: 1.6;
+        }
+
+        .diff-removed {
+            background-color: #ffebee;
+            color: #c62828;
+            text-decoration: line-through;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .diff-added {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .diff-changed {
+            background-color: #fff3e0;
+            color: #e65100;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .selector-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-container {
+                max-height: 400px;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
 <body>
-  <app-root></app-root>
-<script src="polyfills-RT5I6R6G.js" type="module"></script><script src="main-YQMBICM2.js" type="module"></script></body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Excel Text Comparison</h1>
+            <p>So sánh nội dung text giữa hai cột trong file Excel với highlighting khác biệt</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <h3>📁 Tải lên file Excel</h3>
+                <p>Kéo thả file Excel (.xlsx, .xls) hoặc nhấn nút bên dưới để chọn file</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Chọn File Excel
+                </button>
+                <div id="fileName" style="margin-top: 15px; font-weight: 600; color: #667eea;"></div>
+            </div>
+
+            <!-- Column Selection -->
+            <div class="column-selector" id="columnSelector">
+                <h3>🎯 Chọn cột để so sánh</h3>
+                <div class="selector-group">
+                    <div class="selector-item">
+                        <label for="column1">Cột thứ nhất:</label>
+                        <select id="column1">
+                            <option value="">-- Chọn cột --</option>
+                        </select>
+                    </div>
+                    <div class="selector-item">
+                        <label for="column2">Cột thứ hai:</label>
+                        <select id="column2">
+                            <option value="">-- Chọn cột --</option>
+                        </select>
+                    </div>
+                    <div class="selector-item">
+                        <button class="compare-btn" id="compareBtn" onclick="compareColumns()" disabled>
+                            So Sánh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading" style="display: none;">
+                <div>⏳ Đang xử lý...</div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <div class="results-header">
+                    <div class="results-title">📋 Kết quả so sánh</div>
+                    <button class="export-btn" onclick="exportResults()">
+                        💾 Xuất Excel
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th class="original-col">Cột 1 (Gốc)</th>
+                                <th class="original-col">Cột 2 (Gốc)</th>
+                                <th class="comparison-col">Cột 1 (So sánh)</th>
+                                <th class="comparison-col">Cột 2 (So sánh)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let excelData = null;
+        let comparisonResults = null;
+        let originalHeaders = [];
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        // Drag and drop functionality
+        const uploadSection = document.getElementById('uploadSection');
+        uploadSection.addEventListener('dragover', handleDragOver);
+        uploadSection.addEventListener('dragleave', handleDragLeave);
+        uploadSection.addEventListener('drop', handleDrop);
+
+        // Column selection change handlers
+        document.getElementById('column1').addEventListener('change', validateSelection);
+        document.getElementById('column2').addEventListener('change', validateSelection);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function processFile(file) {
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                showError('Vui lòng chọn file Excel (.xlsx hoặc .xls)');
+                return;
+            }
+
+            document.getElementById('fileName').textContent = `📄 ${file.name}`;
+            showLoading();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Get first worksheet
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert to JSON
+                    excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (excelData.length < 2) {
+                        throw new Error('File Excel phải có ít nhất 2 hàng (header và data)');
+                    }
+
+                    originalHeaders = excelData[0];
+                    populateColumnSelectors();
+                    showSuccess('✅ File Excel đã được tải thành công!');
+                    hideLoading();
+                    
+                } catch (error) {
+                    showError('Lỗi khi đọc file Excel: ' + error.message);
+                    hideLoading();
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function populateColumnSelectors() {
+            const column1Select = document.getElementById('column1');
+            const column2Select = document.getElementById('column2');
+            
+            // Clear existing options
+            column1Select.innerHTML = '<option value="">-- Chọn cột --</option>';
+            column2Select.innerHTML = '<option value="">-- Chọn cột --</option>';
+            
+            // Add column options
+            originalHeaders.forEach((header, index) => {
+                const option1 = document.createElement('option');
+                const option2 = document.createElement('option');
+                
+                option1.value = index;
+                option1.textContent = `${XLSX.utils.encode_col(index)} - ${header || 'Cột ' + (index + 1)}`;
+                
+                option2.value = index;
+                option2.textContent = `${XLSX.utils.encode_col(index)} - ${header || 'Cột ' + (index + 1)}`;
+                
+                column1Select.appendChild(option1);
+                column2Select.appendChild(option2);
+            });
+            
+            document.getElementById('columnSelector').style.display = 'block';
+        }
+
+        function validateSelection() {
+            const col1 = document.getElementById('column1').value;
+            const col2 = document.getElementById('column2').value;
+            const compareBtn = document.getElementById('compareBtn');
+            
+            compareBtn.disabled = !(col1 && col2 && col1 !== col2);
+        }
+
+        function compareColumns() {
+            const col1Index = parseInt(document.getElementById('column1').value);
+            const col2Index = parseInt(document.getElementById('column2').value);
+            
+            if (isNaN(col1Index) || isNaN(col2Index) || col1Index === col2Index) {
+                showError('Vui lòng chọn hai cột khác nhau để so sánh');
+                return;
+            }
+
+            showLoading();
+
+            setTimeout(() => {
+                try {
+                    comparisonResults = [];
+                    
+                    // Process each row (skip header)
+                    for (let i = 1; i < excelData.length; i++) {
+                        const row = excelData[i];
+                        const text1 = (row[col1Index] || '').toString();
+                        const text2 = (row[col2Index] || '').toString();
+                        
+                        const comparison = compareTexts(text1, text2);
+                        
+                        comparisonResults.push({
+                            rowIndex: i,
+                            original1: text1,
+                            original2: text2,
+                            compared1: comparison.text1,
+                            compared2: comparison.text2
+                        });
+                    }
+                    
+                    displayResults();
+                    hideLoading();
+                    showSuccess('✅ So sánh hoàn tất!');
+                    
+                } catch (error) {
+                    showError('Lỗi khi so sánh: ' + error.message);
+                    hideLoading();
+                }
+            }, 100);
+        }
+
+        function compareTexts(text1, text2) {
+            // Use diff library to find differences
+            const diff = Diff.diffWords(text1, text2);
+            
+            let result1 = '';
+            let result2 = '';
+            
+            diff.forEach(part => {
+                if (part.added) {
+                    result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(part.value)}</span>`;
+                } else if (part.removed) {
+                    result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold; text-decoration: line-through;">${escapeHtml(part.value)}</span>`;
+                } else {
+                    result1 += escapeHtml(part.value);
+                    result2 += escapeHtml(part.value);
+                }
+            });
+            
+            return {
+                text1: result1 || escapeHtml(text1),
+                text2: result2 || escapeHtml(text2)
+            };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function displayResults() {
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            comparisonResults.forEach((result, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="original-col">${escapeHtml(result.original1)}</td>
+                    <td class="original-col">${escapeHtml(result.original2)}</td>
+                    <td class="comparison-col"><div class="diff-text">${result.compared1}</div></td>
+                    <td class="comparison-col"><div class="diff-text">${result.compared2}</div></td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+
+        function exportResults() {
+            if (!comparisonResults) {
+                showError('Chưa có kết quả để xuất');
+                return;
+            }
+
+            try {
+                // Create new workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Prepare data for export
+                const exportData = [];
+                
+                // Header row
+                const col1Name = originalHeaders[parseInt(document.getElementById('column1').value)] || 'Cột 1';
+                const col2Name = originalHeaders[parseInt(document.getElementById('column2').value)] || 'Cột 2';
+                
+                exportData.push([
+                    'STT',
+                    col1Name + ' (Gốc)',
+                    col2Name + ' (Gốc)',
+                    col1Name + ' (So sánh)',
+                    col2Name + ' (So sánh)'
+                ]);
+                
+                // Data rows
+                comparisonResults.forEach((result, index) => {
+                    exportData.push([
+                        index + 1,
+                        result.original1,
+                        result.original2,
+                        stripHtml(result.compared1),
+                        stripHtml(result.compared2)
+                    ]);
+                });
+                
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(exportData);
+                
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'Kết quả so sánh');
+                
+                // Generate file name
+                const now = new Date();
+                const fileName = `text_comparison_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.xlsx`;
+                
+                // Save file
+                XLSX.writeFile(wb, fileName);
+                
+                showSuccess('✅ File Excel đã được xuất thành công!');
+                
+            } catch (error) {
+                showError('Lỗi khi xuất file: ' + error.message);
+            }
+        }
+
+        function stripHtml(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            return div.textContent || div.innerText || '';
+        }
+
+        function showError(message) {
+            removeMessages();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.main-content').insertBefore(errorDiv, document.querySelector('.main-content').firstChild);
+            
+            setTimeout(removeMessages, 5000);
+        }
+
+        function showSuccess(message) {
+            removeMessages();
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.main-content').insertBefore(successDiv, document.querySelector('.main-content').firstChild);
+            
+            setTimeout(removeMessages, 3000);
+        }
+
+        function removeMessages() {
+            const messages = document.querySelectorAll('.error, .success');
+            messages.forEach(msg => msg.remove());
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+</body>
 </html>
