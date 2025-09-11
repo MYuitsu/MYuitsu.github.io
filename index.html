@@ -6,7 +6,7 @@
     <title>Excel Text Comparison Tool</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff/5.1.0/diff.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/8.0.2/diff.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -810,22 +810,72 @@
         }
 
         function compareTexts(text1, text2) {
-            // Use diff library to find differences
-            const diff = Diff.diffWords(text1, text2);
+            // Try to use diff library if available, otherwise use custom comparison
+            if (typeof Diff !== 'undefined' && Diff.diffWords) {
+                try {
+                    const diff = Diff.diffWords(text1, text2);
+                    
+                    let result1 = '';
+                    let result2 = '';
+                    
+                    diff.forEach(part => {
+                        if (part.added) {
+                            result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(part.value)}</span>`;
+                        } else if (part.removed) {
+                            result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold; text-decoration: line-through;">${escapeHtml(part.value)}</span>`;
+                        } else {
+                            result1 += escapeHtml(part.value);
+                            result2 += escapeHtml(part.value);
+                        }
+                    });
+                    
+                    return {
+                        text1: result1 || escapeHtml(text1),
+                        text2: result2 || escapeHtml(text2)
+                    };
+                } catch (error) {
+                    console.warn('Diff library error, falling back to custom comparison:', error);
+                }
+            }
+            
+            // Fallback: Custom comparison function
+            return customTextComparison(text1, text2);
+        }
+
+        function customTextComparison(text1, text2) {
+            // Simple word-by-word comparison
+            const words1 = text1.split(/(\s+)/);
+            const words2 = text2.split(/(\s+)/);
             
             let result1 = '';
             let result2 = '';
             
-            diff.forEach(part => {
-                if (part.added) {
-                    result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(part.value)}</span>`;
-                } else if (part.removed) {
-                    result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold; text-decoration: line-through;">${escapeHtml(part.value)}</span>`;
+            const maxLength = Math.max(words1.length, words2.length);
+            
+            for (let i = 0; i < maxLength; i++) {
+                const word1 = words1[i] || '';
+                const word2 = words2[i] || '';
+                
+                if (word1 === word2) {
+                    // Same words
+                    result1 += escapeHtml(word1);
+                    result2 += escapeHtml(word2);
                 } else {
-                    result1 += escapeHtml(part.value);
-                    result2 += escapeHtml(part.value);
+                    // Different words - highlight in red
+                    if (word1) {
+                        result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(word1)}</span>`;
+                    }
+                    if (word2) {
+                        result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(word2)}</span>`;
+                    }
                 }
-            });
+            }
+            
+            // If one text is completely different, highlight everything
+            if (!result1 && !result2) {
+                result1 = `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(text1)}</span>`;
+                result2 = `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(text2)}</span>`;
+            }
             
             return {
                 text1: result1 || escapeHtml(text1),
