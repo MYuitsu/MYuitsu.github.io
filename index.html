@@ -131,6 +131,48 @@
             border-color: #667eea;
         }
 
+        .input-method {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+        }
+
+        .input-method label {
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-method input[type="radio"] {
+            margin: 0;
+        }
+
+        .column-status {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-valid {
+            color: #28a745;
+        }
+
+        .status-invalid {
+            color: #dc3545;
+        }
+
+        .status-warning {
+            color: #ffc107;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .compare-btn {
             background: linear-gradient(45deg, #28a745, #20c997);
             color: white;
@@ -339,7 +381,19 @@
             <!-- Column Selection -->
             <div class="column-selector" id="columnSelector">
                 <h3>🎯 Chọn cột để so sánh</h3>
-                <div class="selector-group">
+                <div class="input-method">
+                    <label>
+                        <input type="radio" name="inputMethod" value="dropdown" checked onchange="toggleInputMethod()">
+                        Chọn từ danh sách
+                    </label>
+                    <label style="margin-left: 20px;">
+                        <input type="radio" name="inputMethod" value="manual" onchange="toggleInputMethod()">
+                        Nhập tên cột (A, B, C, AA, AB...)
+                    </label>
+                </div>
+                
+                <!-- Dropdown Selection -->
+                <div class="selector-group" id="dropdownSelector">
                     <div class="selector-item">
                         <label for="column1">Cột thứ nhất:</label>
                         <select id="column1">
@@ -354,6 +408,29 @@
                     </div>
                     <div class="selector-item">
                         <button class="compare-btn" id="compareBtn" onclick="compareColumns()" disabled>
+                            So Sánh
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Manual Input -->
+                <div class="selector-group" id="manualSelector" style="display: none;">
+                    <div class="selector-item">
+                        <label for="manualColumn1">Cột thứ nhất (A, B, C, AA...):</label>
+                        <input type="text" id="manualColumn1" placeholder="Ví dụ: A, B, AA, AB..." 
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;"
+                               oninput="validateManualInput()">
+                        <div id="column1Status" class="column-status"></div>
+                    </div>
+                    <div class="selector-item">
+                        <label for="manualColumn2">Cột thứ hai (A, B, C, AA...):</label>
+                        <input type="text" id="manualColumn2" placeholder="Ví dụ: A, B, AA, AB..." 
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;"
+                               oninput="validateManualInput()">
+                        <div id="column2Status" class="column-status"></div>
+                    </div>
+                    <div class="selector-item">
+                        <button class="compare-btn" id="compareBtnManual" onclick="compareColumns()" disabled>
                             So Sánh
                         </button>
                     </div>
@@ -490,11 +567,24 @@
                 const option1 = document.createElement('option');
                 const option2 = document.createElement('option');
                 
+                const columnLetter = indexToColumnName(index);
+                const hasData = checkColumnHasData(index);
+                const dataStatus = hasData ? '📊' : '📋';
+                const statusText = hasData ? ' (có dữ liệu)' : ' (trống)';
+                
+                const displayText = `${columnLetter} - ${header || 'Cột ' + (index + 1)}${statusText}`;
+                
                 option1.value = index;
-                option1.textContent = `${XLSX.utils.encode_col(index)} - ${header || 'Cột ' + (index + 1)}`;
+                option1.textContent = `${dataStatus} ${displayText}`;
                 
                 option2.value = index;
-                option2.textContent = `${XLSX.utils.encode_col(index)} - ${header || 'Cột ' + (index + 1)}`;
+                option2.textContent = `${dataStatus} ${displayText}`;
+                
+                // Add visual indication for empty columns
+                if (!hasData) {
+                    option1.style.color = '#999';
+                    option2.style.color = '#999';
+                }
                 
                 column1Select.appendChild(option1);
                 column2Select.appendChild(option2);
@@ -511,13 +601,178 @@
             compareBtn.disabled = !(col1 && col2 && col1 !== col2);
         }
 
-        function compareColumns() {
-            const col1Index = parseInt(document.getElementById('column1').value);
-            const col2Index = parseInt(document.getElementById('column2').value);
+        function toggleInputMethod() {
+            const method = document.querySelector('input[name="inputMethod"]:checked').value;
+            const dropdownSelector = document.getElementById('dropdownSelector');
+            const manualSelector = document.getElementById('manualSelector');
             
-            if (isNaN(col1Index) || isNaN(col2Index) || col1Index === col2Index) {
-                showError('Vui lòng chọn hai cột khác nhau để so sánh');
-                return;
+            if (method === 'dropdown') {
+                dropdownSelector.style.display = 'flex';
+                manualSelector.style.display = 'none';
+            } else {
+                dropdownSelector.style.display = 'none';
+                manualSelector.style.display = 'flex';
+            }
+        }
+
+        function validateManualInput() {
+            const col1Input = document.getElementById('manualColumn1');
+            const col2Input = document.getElementById('manualColumn2');
+            const col1Status = document.getElementById('column1Status');
+            const col2Status = document.getElementById('column2Status');
+            const compareBtn = document.getElementById('compareBtnManual');
+            
+            const col1Value = col1Input.value.trim().toUpperCase();
+            const col2Value = col2Input.value.trim().toUpperCase();
+            
+            // Validate column 1
+            const col1Result = validateColumnName(col1Value);
+            updateColumnStatus(col1Status, col1Result);
+            
+            // Validate column 2
+            const col2Result = validateColumnName(col2Value);
+            updateColumnStatus(col2Status, col2Result);
+            
+            // Enable compare button if both columns are valid and different
+            compareBtn.disabled = !(col1Result.valid && col2Result.valid && col1Value !== col2Value);
+        }
+
+        function validateColumnName(columnName) {
+            if (!columnName) {
+                return { valid: false, message: '', hasData: false };
+            }
+            
+            // Check if column name format is valid (A, B, AA, AB, etc.)
+            const columnPattern = /^[A-Z]+$/;
+            if (!columnPattern.test(columnName)) {
+                return { 
+                    valid: false, 
+                    message: '❌ Tên cột không hợp lệ. Vui lòng nhập A, B, C, AA, AB...', 
+                    hasData: false 
+                };
+            }
+            
+            // Convert column name to index
+            const columnIndex = columnNameToIndex(columnName);
+            
+            if (!excelData || !excelData[0]) {
+                return { 
+                    valid: false, 
+                    message: '⚠️ Chưa có dữ liệu Excel', 
+                    hasData: false 
+                };
+            }
+            
+            // Check if column exists in the data
+            if (columnIndex >= excelData[0].length) {
+                return { 
+                    valid: false, 
+                    message: `❌ Cột ${columnName} không tồn tại trong file Excel`, 
+                    hasData: false 
+                };
+            }
+            
+            // Check if column has data
+            const hasData = checkColumnHasData(columnIndex);
+            const headerName = excelData[0][columnIndex] || 'Không có tên';
+            
+            if (!hasData) {
+                return { 
+                    valid: true, 
+                    message: `⚠️ Cột ${columnName} (${headerName}) - Không có dữ liệu`, 
+                    hasData: false 
+                };
+            }
+            
+            return { 
+                valid: true, 
+                message: `✅ Cột ${columnName} (${headerName}) - Có dữ liệu`, 
+                hasData: true 
+            };
+        }
+
+        function columnNameToIndex(columnName) {
+            let result = 0;
+            for (let i = 0; i < columnName.length; i++) {
+                result = result * 26 + (columnName.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
+            }
+            return result - 1;
+        }
+
+        function indexToColumnName(index) {
+            let result = '';
+            while (index >= 0) {
+                result = String.fromCharCode((index % 26) + 'A'.charCodeAt(0)) + result;
+                index = Math.floor(index / 26) - 1;
+            }
+            return result;
+        }
+
+        function checkColumnHasData(columnIndex) {
+            if (!excelData || excelData.length < 2) return false;
+            
+            // Check rows after header
+            for (let i = 1; i < excelData.length; i++) {
+                const cellValue = excelData[i][columnIndex];
+                if (cellValue !== undefined && cellValue !== null && cellValue.toString().trim() !== '') {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateColumnStatus(statusElement, result) {
+            statusElement.textContent = result.message;
+            statusElement.className = 'column-status';
+            
+            if (result.valid) {
+                if (result.hasData) {
+                    statusElement.classList.add('status-valid');
+                } else {
+                    statusElement.classList.add('status-warning');
+                }
+            } else {
+                statusElement.classList.add('status-invalid');
+            }
+        }
+
+        function compareColumns() {
+            let col1Index, col2Index;
+            
+            // Check which input method is being used
+            const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
+            
+            if (inputMethod === 'dropdown') {
+                col1Index = parseInt(document.getElementById('column1').value);
+                col2Index = parseInt(document.getElementById('column2').value);
+                
+                if (isNaN(col1Index) || isNaN(col2Index) || col1Index === col2Index) {
+                    showError('Vui lòng chọn hai cột khác nhau để so sánh');
+                    return;
+                }
+            } else {
+                // Manual input
+                const col1Name = document.getElementById('manualColumn1').value.trim().toUpperCase();
+                const col2Name = document.getElementById('manualColumn2').value.trim().toUpperCase();
+                
+                if (!col1Name || !col2Name) {
+                    showError('Vui lòng nhập tên cột để so sánh');
+                    return;
+                }
+                
+                if (col1Name === col2Name) {
+                    showError('Vui lòng chọn hai cột khác nhau để so sánh');
+                    return;
+                }
+                
+                col1Index = columnNameToIndex(col1Name);
+                col2Index = columnNameToIndex(col2Name);
+                
+                // Validate columns exist
+                if (!excelData || col1Index >= excelData[0].length || col2Index >= excelData[0].length) {
+                    showError('Một hoặc cả hai cột không tồn tại trong file Excel');
+                    return;
+                }
             }
 
             showLoading();
@@ -623,8 +878,23 @@
                 const exportData = [];
                 
                 // Header row
-                const col1Name = originalHeaders[parseInt(document.getElementById('column1').value)] || 'Cột 1';
-                const col2Name = originalHeaders[parseInt(document.getElementById('column2').value)] || 'Cột 2';
+                let col1Name, col2Name, col1Index, col2Index;
+                
+                const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
+                
+                if (inputMethod === 'dropdown') {
+                    col1Index = parseInt(document.getElementById('column1').value);
+                    col2Index = parseInt(document.getElementById('column2').value);
+                    col1Name = originalHeaders[col1Index] || `Cột ${indexToColumnName(col1Index)}`;
+                    col2Name = originalHeaders[col2Index] || `Cột ${indexToColumnName(col2Index)}`;
+                } else {
+                    const col1NameInput = document.getElementById('manualColumn1').value.trim().toUpperCase();
+                    const col2NameInput = document.getElementById('manualColumn2').value.trim().toUpperCase();
+                    col1Index = columnNameToIndex(col1NameInput);
+                    col2Index = columnNameToIndex(col2NameInput);
+                    col1Name = originalHeaders[col1Index] || `Cột ${col1NameInput}`;
+                    col2Name = originalHeaders[col2Index] || `Cột ${col2NameInput}`;
+                }
                 
                 exportData.push([
                     'STT',
