@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Text Comparison Tool</title>
+    <title>Công cụ so sánh text Excel - MYuitsu</title>
+    <meta name="description" content="Công cụ so sánh nội dung text giữa hai cột Excel online miễn phí. Tạo bởi MYuitsu - highlight khác biệt bằng màu đỏ, xuất kết quả Excel.">
+    <meta name="keywords" content="MYuitsu, so sánh Excel, compare Excel, text comparison, công cụ Excel, Excel tool">
+    <meta name="author" content="MYuitsu">
+    <meta property="og:title" content="Công cụ so sánh text Excel - MYuitsu">
+    <meta property="og:description" content="So sánh nội dung text giữa hai cột trong file Excel với highlighting khác biệt màu đỏ">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://myuitsu.github.io">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/8.0.2/diff.min.js"></script>
@@ -362,8 +369,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Excel Text Comparison</h1>
-            <p>So sánh nội dung text giữa hai cột trong file Excel với highlighting khác biệt</p>
+            <h1>📊 Công cụ so sánh text Excel</h1>
+            <p>So sánh nội dung text giữa hai cột trong file Excel với highlighting khác biệt màu đỏ</p>
+            <p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">Phát triển bởi <strong>MYuitsu</strong> - Công cụ miễn phí cho mọi người</p>
         </div>
 
         <div class="main-content">
@@ -371,6 +379,9 @@
             <div class="upload-section" id="uploadSection">
                 <h3>📁 Tải lên file Excel</h3>
                 <p>Kéo thả file Excel (.xlsx, .xls) hoặc nhấn nút bên dưới để chọn file</p>
+                <p style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+                    Công cụ MYuitsu hỗ trợ so sánh dữ liệu Excel nhanh chóng và chính xác
+                </p>
                 <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
                     Chọn File Excel
@@ -380,41 +391,13 @@
 
             <!-- Column Selection -->
             <div class="column-selector" id="columnSelector">
-                <h3>🎯 Chọn cột để so sánh</h3>
-                <div class="input-method">
-                    <label>
-                        <input type="radio" name="inputMethod" value="dropdown" checked onchange="toggleInputMethod()">
-                        Chọn từ danh sách
-                    </label>
-                    <label style="margin-left: 20px;">
-                        <input type="radio" name="inputMethod" value="manual" onchange="toggleInputMethod()">
-                        Nhập tên cột (A, B, C, AA, AB...)
-                    </label>
-                </div>
+                <h3>🎯 Nhập tên cột để so sánh</h3>
+                <p style="margin-bottom: 20px; color: #666; font-size: 0.9rem;">
+                    Nhập tên cột Excel (A, B, C, AA, AB, AC...) để so sánh nội dung
+                </p>
                 
-                <!-- Dropdown Selection -->
-                <div class="selector-group" id="dropdownSelector">
-                    <div class="selector-item">
-                        <label for="column1">Cột thứ nhất:</label>
-                        <select id="column1">
-                            <option value="">-- Chọn cột --</option>
-                        </select>
-                    </div>
-                    <div class="selector-item">
-                        <label for="column2">Cột thứ hai:</label>
-                        <select id="column2">
-                            <option value="">-- Chọn cột --</option>
-                        </select>
-                    </div>
-                    <div class="selector-item">
-                        <button class="compare-btn" id="compareBtn" onclick="compareColumns()" disabled>
-                            So Sánh
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Manual Input -->
-                <div class="selector-group" id="manualSelector" style="display: none;">
+                <!-- Manual Input Only -->
+                <div class="selector-group">
                     <div class="selector-item">
                         <label for="manualColumn1">Cột thứ nhất (A, B, C, AA...):</label>
                         <input type="text" id="manualColumn1" placeholder="Ví dụ: A, B, AA, AB..." 
@@ -430,7 +413,7 @@
                         <div id="column2Status" class="column-status"></div>
                     </div>
                     <div class="selector-item">
-                        <button class="compare-btn" id="compareBtnManual" onclick="compareColumns()" disabled>
+                        <button class="compare-btn" id="compareBtn" onclick="compareColumns()" disabled>
                             So Sánh
                         </button>
                     </div>
@@ -467,12 +450,144 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Statistics Section -->
+        <div style="background: linear-gradient(45deg, #e8f5e8, #f0f8ff); padding: 20px; margin: 30px 0; border-radius: 10px; text-align: center;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">📊 Thống kê sử dụng</h3>
+            <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #28a745;" id="totalVisitors">0</div>
+                    <div style="font-size: 0.9rem; color: #666;">Lượt truy cập</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #667eea;" id="totalComparisons">0</div>
+                    <div style="font-size: 0.9rem; color: #666;">Lần so sánh</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #fd7e14;" id="totalExports">0</div>
+                    <div style="font-size: 0.9rem; color: #666;">File đã xuất</div>
+                </div>
+            </div>
+            <p style="margin: 15px 0 0 0; color: #999; font-size: 0.8rem;">
+                Cảm ơn bạn đã tin tưởng sử dụng công cụ của MYuitsu! 🙏
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+            <p style="margin: 0; color: #666; font-size: 0.9rem;">
+                © 2025 <strong>MYuitsu</strong> - Công cụ so sánh text Excel online miễn phí
+            </p>
+            <p style="margin: 5px 0 0 0; color: #999; font-size: 0.8rem;">
+                Phát triển với ❤️ bởi MYuitsu | 
+                <a href="https://github.com/MYuitsu" target="_blank" style="color: #667eea; text-decoration: none;">GitHub</a> | 
+                Excel comparison tool Vietnam
+            </p>
+        </div>
     </div>
 
     <script>
         let excelData = null;
         let comparisonResults = null;
         let originalHeaders = [];
+
+        // Statistics management
+        const STATS_KEY = 'myuitsu_excel_stats';
+        
+        // Initialize statistics on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStats();
+            updateVisitorCount();
+            updateStatsDisplay();
+            
+            // Initialize manual input validation
+            setTimeout(() => {
+                validateManualInput();
+            }, 100);
+        });
+
+        function initializeStats() {
+            const stats = getStats();
+            // Auto-increment visitor count (simplified approach)
+            if (!sessionStorage.getItem('visited_today')) {
+                stats.totalVisitors++;
+                saveStats(stats);
+                sessionStorage.setItem('visited_today', 'true');
+            }
+        }
+
+        function getStats() {
+            const defaultStats = {
+                totalVisitors: 0,
+                totalComparisons: 0,
+                totalExports: 0,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            try {
+                const saved = localStorage.getItem(STATS_KEY);
+                return saved ? { ...defaultStats, ...JSON.parse(saved) } : defaultStats;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                return defaultStats;
+            }
+        }
+
+        function saveStats(stats) {
+            try {
+                stats.lastUpdated = new Date().toISOString();
+                localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+                updateStatsDisplay();
+            } catch (error) {
+                console.error('Error saving stats:', error);
+            }
+        }
+
+        function updateStatsDisplay() {
+            const stats = getStats();
+            document.getElementById('totalVisitors').textContent = formatNumber(stats.totalVisitors);
+            document.getElementById('totalComparisons').textContent = formatNumber(stats.totalComparisons);
+            document.getElementById('totalExports').textContent = formatNumber(stats.totalExports);
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function incrementComparisons() {
+            const stats = getStats();
+            stats.totalComparisons++;
+            saveStats(stats);
+        }
+
+        function incrementExports() {
+            const stats = getStats();
+            stats.totalExports++;
+            saveStats(stats);
+        }
+
+        function updateVisitorCount() {
+            // Try to get visitor count from a free API service
+            fetch('https://api.countapi.xyz/hit/myuitsu.github.io/visits')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.value) {
+                        const stats = getStats();
+                        // Update with real visitor count if available
+                        stats.totalVisitors = Math.max(stats.totalVisitors, data.value);
+                        saveStats(stats);
+                    }
+                })
+                .catch(error => {
+                    console.log('Using local visitor count');
+                    // Fallback to local counting if API fails
+                });
+        }
 
         // File upload handling
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -483,9 +598,7 @@
         uploadSection.addEventListener('dragleave', handleDragLeave);
         uploadSection.addEventListener('drop', handleDrop);
 
-        // Column selection change handlers
-        document.getElementById('column1').addEventListener('change', validateSelection);
-        document.getElementById('column2').addEventListener('change', validateSelection);
+
 
         function handleDragOver(e) {
             e.preventDefault();
@@ -545,6 +658,9 @@
                     showSuccess('✅ File Excel đã được tải thành công!');
                     hideLoading();
                     
+                    // Show welcome message with stats
+                    showWelcomeMessage();
+                    
                 } catch (error) {
                     showError('Lỗi khi đọc file Excel: ' + error.message);
                     hideLoading();
@@ -555,64 +671,8 @@
         }
 
         function populateColumnSelectors() {
-            const column1Select = document.getElementById('column1');
-            const column2Select = document.getElementById('column2');
-            
-            // Clear existing options
-            column1Select.innerHTML = '<option value="">-- Chọn cột --</option>';
-            column2Select.innerHTML = '<option value="">-- Chọn cột --</option>';
-            
-            // Add column options
-            originalHeaders.forEach((header, index) => {
-                const option1 = document.createElement('option');
-                const option2 = document.createElement('option');
-                
-                const columnLetter = indexToColumnName(index);
-                const hasData = checkColumnHasData(index);
-                const dataStatus = hasData ? '📊' : '📋';
-                const statusText = hasData ? ' (có dữ liệu)' : ' (trống)';
-                
-                const displayText = `${columnLetter} - ${header || 'Cột ' + (index + 1)}${statusText}`;
-                
-                option1.value = index;
-                option1.textContent = `${dataStatus} ${displayText}`;
-                
-                option2.value = index;
-                option2.textContent = `${dataStatus} ${displayText}`;
-                
-                // Add visual indication for empty columns
-                if (!hasData) {
-                    option1.style.color = '#999';
-                    option2.style.color = '#999';
-                }
-                
-                column1Select.appendChild(option1);
-                column2Select.appendChild(option2);
-            });
-            
+            // Simply show the column selector
             document.getElementById('columnSelector').style.display = 'block';
-        }
-
-        function validateSelection() {
-            const col1 = document.getElementById('column1').value;
-            const col2 = document.getElementById('column2').value;
-            const compareBtn = document.getElementById('compareBtn');
-            
-            compareBtn.disabled = !(col1 && col2 && col1 !== col2);
-        }
-
-        function toggleInputMethod() {
-            const method = document.querySelector('input[name="inputMethod"]:checked').value;
-            const dropdownSelector = document.getElementById('dropdownSelector');
-            const manualSelector = document.getElementById('manualSelector');
-            
-            if (method === 'dropdown') {
-                dropdownSelector.style.display = 'flex';
-                manualSelector.style.display = 'none';
-            } else {
-                dropdownSelector.style.display = 'none';
-                manualSelector.style.display = 'flex';
-            }
         }
 
         function validateManualInput() {
@@ -620,7 +680,7 @@
             const col2Input = document.getElementById('manualColumn2');
             const col1Status = document.getElementById('column1Status');
             const col2Status = document.getElementById('column2Status');
-            const compareBtn = document.getElementById('compareBtnManual');
+            const compareBtn = document.getElementById('compareBtn');
             
             const col1Value = col1Input.value.trim().toUpperCase();
             const col2Value = col2Input.value.trim().toUpperCase();
@@ -737,42 +797,27 @@
         }
 
         function compareColumns() {
-            let col1Index, col2Index;
+            // Get manual input values
+            const col1Name = document.getElementById('manualColumn1').value.trim().toUpperCase();
+            const col2Name = document.getElementById('manualColumn2').value.trim().toUpperCase();
             
-            // Check which input method is being used
-            const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
+            if (!col1Name || !col2Name) {
+                showError('Vui lòng nhập tên cột để so sánh');
+                return;
+            }
             
-            if (inputMethod === 'dropdown') {
-                col1Index = parseInt(document.getElementById('column1').value);
-                col2Index = parseInt(document.getElementById('column2').value);
-                
-                if (isNaN(col1Index) || isNaN(col2Index) || col1Index === col2Index) {
-                    showError('Vui lòng chọn hai cột khác nhau để so sánh');
-                    return;
-                }
-            } else {
-                // Manual input
-                const col1Name = document.getElementById('manualColumn1').value.trim().toUpperCase();
-                const col2Name = document.getElementById('manualColumn2').value.trim().toUpperCase();
-                
-                if (!col1Name || !col2Name) {
-                    showError('Vui lòng nhập tên cột để so sánh');
-                    return;
-                }
-                
-                if (col1Name === col2Name) {
-                    showError('Vui lòng chọn hai cột khác nhau để so sánh');
-                    return;
-                }
-                
-                col1Index = columnNameToIndex(col1Name);
-                col2Index = columnNameToIndex(col2Name);
-                
-                // Validate columns exist
-                if (!excelData || col1Index >= excelData[0].length || col2Index >= excelData[0].length) {
-                    showError('Một hoặc cả hai cột không tồn tại trong file Excel');
-                    return;
-                }
+            if (col1Name === col2Name) {
+                showError('Vui lòng chọn hai cột khác nhau để so sánh');
+                return;
+            }
+            
+            const col1Index = columnNameToIndex(col1Name);
+            const col2Index = columnNameToIndex(col2Name);
+            
+            // Validate columns exist
+            if (!excelData || col1Index >= excelData[0].length || col2Index >= excelData[0].length) {
+                showError('Một hoặc cả hai cột không tồn tại trong file Excel');
+                return;
             }
 
             showLoading();
@@ -802,6 +847,9 @@
                     hideLoading();
                     showSuccess('✅ So sánh hoàn tất!');
                     
+                    // Update statistics
+                    incrementComparisons();
+                    
                 } catch (error) {
                     showError('Lỗi khi so sánh: ' + error.message);
                     hideLoading();
@@ -810,71 +858,32 @@
         }
 
         function compareTexts(text1, text2) {
-            // Try to use diff library if available, otherwise use custom comparison
-            if (typeof Diff !== 'undefined' && Diff.diffWords) {
-                try {
-                    const diff = Diff.diffWords(text1, text2);
-                    
-                    let result1 = '';
-                    let result2 = '';
-                    
-                    diff.forEach(part => {
-                        if (part.added) {
-                            result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(part.value)}</span>`;
-                        } else if (part.removed) {
-                            result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold; text-decoration: line-through;">${escapeHtml(part.value)}</span>`;
-                        } else {
-                            result1 += escapeHtml(part.value);
-                            result2 += escapeHtml(part.value);
-                        }
-                    });
-                    
-                    return {
-                        text1: result1 || escapeHtml(text1),
-                        text2: result2 || escapeHtml(text2)
-                    };
-                } catch (error) {
-                    console.warn('Diff library error, falling back to custom comparison:', error);
-                }
-            }
-            
-            // Fallback: Custom comparison function
-            return customTextComparison(text1, text2);
+            // Use character-by-character comparison
+            return characterByCharacterComparison(text1, text2);
         }
 
-        function customTextComparison(text1, text2) {
-            // Simple word-by-word comparison
-            const words1 = text1.split(/(\s+)/);
-            const words2 = text2.split(/(\s+)/);
-            
+        function characterByCharacterComparison(text1, text2) {
+            const maxLength = Math.max(text1.length, text2.length);
             let result1 = '';
             let result2 = '';
             
-            const maxLength = Math.max(words1.length, words2.length);
-            
             for (let i = 0; i < maxLength; i++) {
-                const word1 = words1[i] || '';
-                const word2 = words2[i] || '';
+                const char1 = text1[i] || '';
+                const char2 = text2[i] || '';
                 
-                if (word1 === word2) {
-                    // Same words
-                    result1 += escapeHtml(word1);
-                    result2 += escapeHtml(word2);
+                if (char1 === char2) {
+                    // Same characters
+                    result1 += escapeHtml(char1);
+                    result2 += escapeHtml(char2);
                 } else {
-                    // Different words - highlight in red
-                    if (word1) {
-                        result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(word1)}</span>`;
+                    // Different characters - highlight in red
+                    if (char1) {
+                        result1 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(char1)}</span>`;
                     }
-                    if (word2) {
-                        result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(word2)}</span>`;
+                    if (char2) {
+                        result2 += `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(char2)}</span>`;
                     }
                 }
-            }
-            
-            // If one text is completely different, highlight everything
-            if (!result1 && !result2) {
-                result1 = `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(text1)}</span>`;
-                result2 = `<span style="background-color: #ffcccc; color: #d8000c; font-weight: bold;">${escapeHtml(text2)}</span>`;
             }
             
             return {
@@ -928,23 +937,12 @@
                 const exportData = [];
                 
                 // Header row
-                let col1Name, col2Name, col1Index, col2Index;
-                
-                const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
-                
-                if (inputMethod === 'dropdown') {
-                    col1Index = parseInt(document.getElementById('column1').value);
-                    col2Index = parseInt(document.getElementById('column2').value);
-                    col1Name = originalHeaders[col1Index] || `Cột ${indexToColumnName(col1Index)}`;
-                    col2Name = originalHeaders[col2Index] || `Cột ${indexToColumnName(col2Index)}`;
-                } else {
-                    const col1NameInput = document.getElementById('manualColumn1').value.trim().toUpperCase();
-                    const col2NameInput = document.getElementById('manualColumn2').value.trim().toUpperCase();
-                    col1Index = columnNameToIndex(col1NameInput);
-                    col2Index = columnNameToIndex(col2NameInput);
-                    col1Name = originalHeaders[col1Index] || `Cột ${col1NameInput}`;
-                    col2Name = originalHeaders[col2Index] || `Cột ${col2NameInput}`;
-                }
+                const col1NameInput = document.getElementById('manualColumn1').value.trim().toUpperCase();
+                const col2NameInput = document.getElementById('manualColumn2').value.trim().toUpperCase();
+                const col1Index = columnNameToIndex(col1NameInput);
+                const col2Index = columnNameToIndex(col2NameInput);
+                const col1Name = originalHeaders[col1Index] || `Cột ${col1NameInput}`;
+                const col2Name = originalHeaders[col2Index] || `Cột ${col2NameInput}`;
                 
                 exportData.push([
                     'STT',
@@ -979,6 +977,9 @@
                 XLSX.writeFile(wb, fileName);
                 
                 showSuccess('✅ File Excel đã được xuất thành công!');
+                
+                // Update statistics
+                incrementExports();
                 
             } catch (error) {
                 showError('Lỗi khi xuất file: ' + error.message);
@@ -1022,6 +1023,21 @@
 
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
+        }
+
+        function showWelcomeMessage() {
+            const stats = getStats();
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'success';
+            welcomeDiv.innerHTML = `
+                🎉 Chào mừng! Bạn là người thứ <strong>${formatNumber(stats.totalVisitors)}</strong> sử dụng công cụ này.
+                <br><small>Đã có ${formatNumber(stats.totalComparisons)} lần so sánh và ${formatNumber(stats.totalExports)} file được xuất!</small>
+            `;
+            document.querySelector('.main-content').insertBefore(welcomeDiv, document.querySelector('.column-selector'));
+            
+            setTimeout(() => {
+                welcomeDiv.remove();
+            }, 5000);
         }
     </script>
 </body>
