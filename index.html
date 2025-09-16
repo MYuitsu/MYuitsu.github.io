@@ -430,7 +430,7 @@
                 <div class="results-header">
                     <div class="results-title">📋 Kết quả so sánh</div>
                     <button class="export-btn" onclick="exportResults()">
-                        💾 Xuất Excel
+                        💾 Xuất Excel (Có màu so sánh)
                     </button>
                 </div>
                 <div class="table-container">
@@ -845,7 +845,7 @@
                     
                     displayResults();
                     hideLoading();
-                    showSuccess('✅ So sánh hoàn tất!');
+                    showSuccess('✅ So sánh hoàn tất! Bấm "Xuất kết quả Excel" để tải file có màu sắc.');
                     
                     // Update statistics
                     incrementComparisons();
@@ -924,7 +924,7 @@
         }
 
         function exportResults() {
-            if (!comparisonResults) {
+            if (!comparisonResults || !excelData) {
                 showError('Chưa có kết quả để xuất');
                 return;
             }
@@ -933,10 +933,7 @@
                 // Create new workbook
                 const wb = XLSX.utils.book_new();
                 
-                // Prepare data for export
-                const exportData = [];
-                
-                // Header row
+                // Get column information
                 const col1NameInput = document.getElementById('manualColumn1').value.trim().toUpperCase();
                 const col2NameInput = document.getElementById('manualColumn2').value.trim().toUpperCase();
                 const col1Index = columnNameToIndex(col1NameInput);
@@ -944,46 +941,138 @@
                 const col1Name = originalHeaders[col1Index] || `Cột ${col1NameInput}`;
                 const col2Name = originalHeaders[col2Index] || `Cột ${col2NameInput}`;
                 
-                exportData.push([
-                    'STT',
-                    col1Name + ' (Gốc)',
-                    col2Name + ' (Gốc)',
-                    col1Name + ' (So sánh)',
-                    col2Name + ' (So sánh)'
-                ]);
+                // Create enhanced export data with original file + comparison columns
+                const exportData = [];
                 
-                // Data rows
-                comparisonResults.forEach((result, index) => {
-                    exportData.push([
-                        index + 1,
-                        result.original1,
-                        result.original2,
-                        stripHtml(result.compared1),
-                        stripHtml(result.compared2)
-                    ]);
-                });
+                // Create header row - original columns + 2 new comparison columns
+                const headerRow = [...originalHeaders];
+                headerRow.push(`${col1Name} (So sánh)`, `${col2Name} (So sánh)`);
+                exportData.push(headerRow);
+                
+                // Add data rows
+                for (let i = 1; i < excelData.length; i++) {
+                    const originalRow = [...excelData[i]];
+                    
+                    // Find corresponding comparison result
+                    const comparisonResult = comparisonResults.find(result => result.rowIndex === i);
+                    
+                    if (comparisonResult) {
+                        // Add comparison columns with differences marked
+                        const diff1 = markDifferencesForExcel(comparisonResult.original1, comparisonResult.original2, true);
+                        const diff2 = markDifferencesForExcel(comparisonResult.original1, comparisonResult.original2, false);
+                        
+                        originalRow.push(diff1, diff2);
+                    } else {
+                        // No comparison data, add original values
+                        const text1 = (excelData[i][col1Index] || '').toString();
+                        const text2 = (excelData[i][col2Index] || '').toString();
+                        originalRow.push(text1, text2);
+                    }
+                    
+                    exportData.push(originalRow);
+                }
                 
                 // Create worksheet
                 const ws = XLSX.utils.aoa_to_sheet(exportData);
                 
+                // Apply styling to comparison columns
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                const comparisonCol1 = range.e.c - 1; // Second to last column
+                const comparisonCol2 = range.e.c;     // Last column
+                
+                // Style the comparison columns
+                for (let row = 0; row <= range.e.r; row++) {
+                    // Style comparison column headers
+                    if (row === 0) {
+                        const col1Cell = XLSX.utils.encode_cell({r: row, c: comparisonCol1});
+                        const col2Cell = XLSX.utils.encode_cell({r: row, c: comparisonCol2});
+                        
+                        if (!ws[col1Cell]) ws[col1Cell] = {};
+                        if (!ws[col2Cell]) ws[col2Cell] = {};
+                        
+                        ws[col1Cell].s = {
+                            fill: {fgColor: {rgb: "FFE6CC"}},
+                            font: {bold: true, color: {rgb: "CC6600"}}
+                        };
+                        
+                        ws[col2Cell].s = {
+                            fill: {fgColor: {rgb: "FFE6CC"}},
+                            font: {bold: true, color: {rgb: "CC6600"}}
+                        };
+                    } else {
+                        // Style data cells in comparison columns
+                        const col1Cell = XLSX.utils.encode_cell({r: row, c: comparisonCol1});
+                        const col2Cell = XLSX.utils.encode_cell({r: row, c: comparisonCol2});
+                        
+                        if (ws[col1Cell]) {
+                            ws[col1Cell].s = {
+                                fill: {fgColor: {rgb: "FFF2E6"}},
+                                font: {color: {rgb: "CC6600"}}
+                            };
+                        }
+                        
+                        if (ws[col2Cell]) {
+                            ws[col2Cell].s = {
+                                fill: {fgColor: {rgb: "FFF2E6"}},
+                                font: {color: {rgb: "CC6600"}}
+                            };
+                        }
+                    }
+                }
+                
+                // Set column widths
+                ws['!cols'] = [];
+                for (let i = 0; i <= range.e.c; i++) {
+                    if (i >= comparisonCol1) {
+                        ws['!cols'][i] = {wch: 30}; // Wider for comparison columns
+                    } else {
+                        ws['!cols'][i] = {wch: 15};
+                    }
+                }
+                
                 // Add worksheet to workbook
-                XLSX.utils.book_append_sheet(wb, ws, 'Kết quả so sánh');
+                XLSX.utils.book_append_sheet(wb, ws, 'Dữ liệu với so sánh');
                 
                 // Generate file name
                 const now = new Date();
-                const fileName = `text_comparison_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.xlsx`;
+                const fileName = `enhanced_excel_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.xlsx`;
                 
                 // Save file
                 XLSX.writeFile(wb, fileName);
                 
-                showSuccess('✅ File Excel đã được xuất thành công!');
+                showSuccess('✅ File Excel đã được xuất với dữ liệu gốc + cột so sánh!');
                 
                 // Update statistics
                 incrementExports();
                 
             } catch (error) {
                 showError('Lỗi khi xuất file: ' + error.message);
+                console.error('Export error:', error);
             }
+        }
+
+        function markDifferencesForExcel(text1, text2, isFirstText) {
+            // Create a text version with markers for differences (for Excel)
+            const maxLength = Math.max(text1.length, text2.length);
+            let result = '';
+            
+            for (let i = 0; i < maxLength; i++) {
+                const char1 = text1[i] || '';
+                const char2 = text2[i] || '';
+                
+                if (char1 === char2) {
+                    result += isFirstText ? char1 : char2;
+                } else {
+                    // Mark differences with special characters
+                    if (isFirstText && char1) {
+                        result += `[${char1}]`; // Mark different characters in brackets
+                    } else if (!isFirstText && char2) {
+                        result += `[${char2}]`; // Mark different characters in brackets
+                    }
+                }
+            }
+            
+            return result;
         }
 
         function stripHtml(html) {
