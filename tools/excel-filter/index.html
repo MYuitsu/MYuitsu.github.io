@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lọc Excel theo Mã</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; padding: 20px; background: #fafafa; }
+    h1 { margin: 0 0 8px; }
+    .upload-section { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+    .upload-section h2 { margin: 0 0 12px; font-size: 1.1rem; }
+    .file-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    select, button { padding: 8px 14px; border: 1px solid #ccc; border-radius: 4px; }
+    button { background: #0969da; color: #fff; font-weight: 500; cursor: pointer; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    .info { color: #666; font-size: 0.85rem; }
+    .status { padding: 10px; background: #e0f2fe; border-left: 3px solid #0284c7; margin: 16px 0; }
+    .status.error { background: #fee; border-left-color: #dc2626; }
+    .status.success { background: #dcfce7; border-left-color: #16a34a; }
+    .table-wrap { overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; margin: 16px 0; max-height: 600px; }
+    table { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 0.85rem; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 10px; text-align: left; white-space: nowrap; }
+    th { background: #f9fafb; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+  </style>
+</head>
+<body>
+  <h1> Lọc Excel theo Mã</h1>
+  <p>Tải 2 file Excel: <strong>File nguồn</strong> và <strong>File mã</strong> (cột A, B).</p>
+  
+  <div class="upload-section">
+    <h2> File 1: Nguồn</h2>
+    <div class="file-row">
+      <label>File:</label>
+      <input id="file-source" type="file" accept=".xlsx,.xls">
+    </div>
+    <div class="file-row" id="sheet-source-row" style="display:none;">
+      <label>Sheet:</label>
+      <select id="sheet-source"></select>
+    </div>
+    <div class="file-row" id="type-row" style="display:none;">
+      <label>Loại dữ liệu:</label>
+      <select id="data-type">
+        <option value="">-- Chọn loại dữ liệu --</option>
+        <option value="xetnghiem">Xét nghiệm (cột R, U)</option>
+        <option value="cdha">Chuẩn đoán hình ảnh (cột R, U)</option>
+        <option value="ttpt">Thủ thuật phẫu thuật (cột N, O)</option>
+      </select>
+    </div>
+    <div class="info" id="info-source">Chưa tải.</div>
+  </div>
+  
+  <div class="upload-section">
+    <h2> File 2: Mã (A, B)</h2>
+    <div class="file-row">
+      <label>File:</label>
+      <input id="file-code" type="file" accept=".xlsx,.xls">
+    </div>
+    <div class="file-row" id="sheet-code-row" style="display:none;">
+      <label>Sheet:</label>
+      <select id="sheet-code"></select>
+    </div>
+    <div class="info" id="info-code">Chưa tải.</div>
+  </div>
+  
+  <button id="btn-process" disabled> Xử lý</button>
+  <div id="status-area"></div>
+  <div id="output"></div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="../../app.js"></script>
+</body>
+</html>
